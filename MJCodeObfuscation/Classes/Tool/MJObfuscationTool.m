@@ -145,36 +145,48 @@
                   completion:(void (^)(NSString *))completion
 {
     if (dir.length == 0 || !completion) return;
-    
+    NSDate *date = NSDate.date;
     !progress ? : progress(@"正在扫描目录...");
-    NSArray *subpaths = [NSFileManager mj_subpathsAtPath:dir extensions:@[@"m", @"mm"]];
+    NSArray *subpaths = [NSFileManager mj_subpathsAtPath:dir extensions:@[@"h", @"m", @"mm"]];
+    
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_semaphore_t sem = dispatch_semaphore_create(10);
     
     NSMutableSet *set = [NSMutableSet set];
     for (NSString *subpath in subpaths) {
         !progress ? : progress([NSString stringWithFormat:@"分析：%@", subpath.lastPathComponent]);
-        [set addObjectsFromArray:
-         [MJClangTool classesAndMethodsWithFile:subpath
-                                       prefixes:prefixes
-                                     searchPath:dir].allObjects];
-    }
-    
-    !progress ? : progress(@"正在混淆...");
-    NSMutableString *fileContent = [NSMutableString string];
-    [fileContent appendString:@"#ifndef MJCodeObfuscation_h\n"];
-    [fileContent appendString:@"#define MJCodeObfuscation_h\n"];
-    NSMutableArray *obfuscations = [NSMutableArray array];
-    for (NSString *token in set) {
-        NSString *obfuscation = nil;
-        while (!obfuscation || [obfuscations containsObject:obfuscation]) {
-            obfuscation = [NSString mj_randomStringWithoutDigitalWithLength:16];
-        }
         
-        [fileContent appendFormat:@"#define %@ %@\n", token, obfuscation];
+        
+        dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
+            
+            [set addObjectsFromArray:
+             [MJClangTool classesAndMethodsWithFile:subpath
+                                           prefixes:prefixes
+                                         searchPath:dir].allObjects];
+            dispatch_semaphore_signal(sem);
+        });
+        
+        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
     }
-    [fileContent appendString:@"#endif"];
     
-    !progress ? : progress(@"混淆完毕!");
-    completion(fileContent);
+    dispatch_group_notify(group, dispatch_get_global_queue(0, 0), ^{
+        !progress ? : progress(@"正在混淆...");
+        NSMutableString *fileContent = [NSMutableString string];
+        [fileContent appendString:@"#ifndef QYCTCodeObfuscation_h\n"];
+        [fileContent appendString:@"#define QYCTCodeObfuscation_h\n"];
+        NSMutableArray *obfuscations = [NSMutableArray array];
+        for (NSString *token in set) {
+            NSString *obfuscation = @"QYCT";
+            
+            [fileContent appendFormat:@"#define %@ %@%@\n", token, obfuscation, token];
+        }
+        [fileContent appendString:@"#endif"];
+        NSInteger time = NSDate.date.timeIntervalSince1970 - date.timeIntervalSince1970;
+        !progress ? : progress([NSString stringWithFormat:@"混淆完毕! %ld:%ld", time / 60, time % 60]);
+        completion(fileContent);
+        
+    });
+    
 }
 
 @end

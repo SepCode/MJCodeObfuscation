@@ -88,7 +88,7 @@
     // 处理结束
     void (^completion)(NSString *) = ^(NSString *fileContent) {
         // 保存
-        self.destFilepath = [self.filepath stringByAppendingPathComponent:@"MJCodeObfuscation.h"];
+        self.destFilepath = [self.filepath stringByAppendingPathComponent:@"QYCTCodeObfuscation.h"];
         self.destFilepath = [NSFileManager mj_checkPathExists:self.destFilepath];
         [fileContent writeToFile:self.destFilepath atomically:YES
                         encoding:NSUTF8StringEncoding error:nil];

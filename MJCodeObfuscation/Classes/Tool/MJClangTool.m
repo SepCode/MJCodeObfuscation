@@ -49,7 +49,10 @@ static bool _isFromFile(const char *filepath, CXCursor cursor) {
     if (filepath == NULL) return 0;
     const char *cursorPath = _getFilename(cursor);
     if (cursorPath == NULL) return 0;
-    return strstr(cursorPath, filepath) != NULL;
+    NSString *fpath = [NSString stringWithUTF8String:filepath].stringByDeletingPathExtension;
+    NSString *cpath = [NSString stringWithUTF8String:cursorPath].stringByDeletingPathExtension;
+    
+    return [fpath isEqualToString:cpath];
 }
 
 enum CXChildVisitResult _visitTokens(CXCursor cursor,
@@ -60,18 +63,28 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
     MJTokensClientData *data = (__bridge MJTokensClientData *)clientData;
     if (!_isFromFile(data.file.UTF8String, cursor)) return CXChildVisit_Continue;
     
-    if (cursor.kind == CXCursor_ObjCInstanceMethodDecl ||
-        cursor.kind == CXCursor_ObjCClassMethodDecl ||
-        cursor.kind == CXCursor_ObjCImplementationDecl) {
+    if (cursor.kind == CXCursor_EnumConstantDecl ||//常量枚举
+        cursor.kind == CXCursor_ObjCInterfaceDecl ||// 声明
+        cursor.kind == CXCursor_ObjCCategoryDecl ||// 分类声明
+        cursor.kind == CXCursor_ObjCProtocolDecl ||// 协议
+        cursor.kind == CXCursor_ObjCImplementationDecl ||// 实现
+        cursor.kind == CXCursor_EnumDecl ||//枚举
+        cursor.kind == CXCursor_ObjCCategoryImplDecl ||//分类实现
+        cursor.kind == CXCursor_TypedefDecl //Typedef
+        ) {
         NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
         NSArray *tokens = [name componentsSeparatedByString:@":"];
         
         // 前缀过滤
         for (NSString *token in tokens) {
-            for (NSString *prefix in data.prefixes) {
-                if ([token rangeOfString:prefix].location == 0) {
-                    [data.tokens addObject:token];
-                }
+//            for (NSString *prefix in data.prefixes) {
+//                if ([token rangeOfString:prefix].location == 0) {
+//                    [data.tokens addObject:token];
+//                }
+//            }
+            
+            if (token.length) {
+                [data.tokens addObject:token];
             }
         }
     }
