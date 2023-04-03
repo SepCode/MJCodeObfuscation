@@ -174,7 +174,6 @@
         NSMutableString *fileContent = [NSMutableString string];
         [fileContent appendString:@"#ifndef QYCTCodeObfuscation_h\n"];
         [fileContent appendString:@"#define QYCTCodeObfuscation_h\n"];
-        NSMutableArray *obfuscations = [NSMutableArray array];
         for (NSString *token in set) {
             NSString *obfuscation = @"QYCT";
             

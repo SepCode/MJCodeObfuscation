@@ -125,7 +125,7 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="22" id="Gfw-b4-bD1"/>
                                 </constraints>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="请输入要搜索的前缀，多个前缀之间用空格隔开" drawsBackground="YES" id="wTB-Da-5ok">
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" title="QYCT" placeholderString="请输入要搜索的前缀，多个前缀之间用空格隔开" drawsBackground="YES" id="wTB-Da-5ok">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -273,15 +273,15 @@
                             <scrollView horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WAl-Mp-Ahs">
                                 <rect key="frame" x="20" y="141" width="508" height="180"/>
                                 <clipView key="contentView" drawsBackground="NO" id="xET-2b-oGy">
-                                    <rect key="frame" x="1" y="1" width="506" height="178"/>
+                                    <rect key="frame" x="1" y="1" width="491" height="178"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <textView editable="NO" importsGraphics="NO" verticallyResizable="YES" usesFontPanel="YES" findStyle="panel" continuousSpellChecking="YES" allowsUndo="YES" usesRuler="YES" allowsNonContiguousLayout="YES" quoteSubstitution="YES" dashSubstitution="YES" spellingCorrection="YES" smartInsertDelete="YES" id="RDw-3i-unz" customClass="MJTextView">
-                                            <rect key="frame" x="0.0" y="0.0" width="506" height="178"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="491" height="178"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                                            <size key="minSize" width="506" height="178"/>
+                                            <size key="minSize" width="491" height="178"/>
                                             <size key="maxSize" width="508" height="10000000"/>
                                             <color key="insertionPointColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                         </textView>
@@ -295,7 +295,7 @@
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                                 <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="KLO-Za-YsP">
-                                    <rect key="frame" x="491" y="1" width="16" height="178"/>
+                                    <rect key="frame" x="492" y="1" width="15" height="178"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
                             </scrollView>
