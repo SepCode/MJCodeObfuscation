@@ -15,7 +15,7 @@
                 searchPath:(NSString *)searchPath;
 
 /** 获得file中的所有类名、方法名） */
-+ (NSSet *)classesAndMethodsWithFile:(NSString *)file
++ (NSArray *)classesAndMethodsWithFile:(NSString *)file
                             prefixes:(NSArray *)prefixes
                           searchPath:(NSString *)searchPath;
 

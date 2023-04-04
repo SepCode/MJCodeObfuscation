@@ -16,6 +16,7 @@
 @interface MJTokensClientData : NSObject
 @property (nonatomic, strong) NSArray *prefixes;
 @property (nonatomic, strong) NSMutableSet *tokens;
+@property (nonatomic, strong) NSMutableSet *categorys;
 @property (nonatomic, copy) NSString *file;
 @end
 
@@ -55,6 +56,21 @@ static bool _isFromFile(const char *filepath, CXCursor cursor) {
     return [fpath isEqualToString:cpath];
 }
 
+bool isStatic(CXCursor cursor) {
+    if (clang_getCursorKind(cursor) != CXCursor_VarDecl) {
+        return false;
+    }
+//    CXType type = clang_getCursorType(cursor);
+//    if (!clang_isConstQualifiedType(type)) {
+//        return false;
+//    }
+    enum CX_StorageClass storage = clang_Cursor_getStorageClass(cursor);
+    if (storage != CX_SC_Static) {
+        return false;
+    }
+    return true;
+}
+
 enum CXChildVisitResult _visitTokens(CXCursor cursor,
                                       CXCursor parent,
                                       CXClientData clientData) {
@@ -63,29 +79,59 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
     MJTokensClientData *data = (__bridge MJTokensClientData *)clientData;
     if (!_isFromFile(data.file.UTF8String, cursor)) return CXChildVisit_Continue;
     
-    if (cursor.kind == CXCursor_EnumConstantDecl ||//常量枚举
+    
+    
+    // 分类的类对象可以找到，clang_getCursorUSR有返回，找不到时clang_getCursorUSR为空
+    // 分类的usr为 c:objc(cy) ，扩展的usr为 c:objc(ext)
+    // 分类的clang_getCursorSpelling 有值，扩展没有值
+    // 分类的类可以通过bundleForClass是否是mainBundle进行判断
+    // 分类的类如果是系统类，属性名和方法需要改名，不是系统类如果能找到，不需要改名，找不到需要改名。
+    
+    // 分类或者扩展
+    if ((parent.kind == CXCursor_ObjCCategoryDecl || parent.kind == CXCursor_ObjCCategoryImplDecl) && clang_getCursorSemanticParent(parent).kind == CXCursor_TranslationUnit) {
+        NSString *usr = [NSString stringWithUTF8String:clang_getCString(clang_getCursorUSR(parent))];
+        
+        // 有类的分类或扩展
+        if (usr.length > 0) {
+            NSString *cy = @"c:objc(cy)";
+            if ([usr hasPrefix:cy]) { // 分类
+                NSArray <NSString *>*usrs = [usr componentsSeparatedByString:@"@"];
+                NSString *name = [usrs.firstObject substringFromIndex:cy.length];
+                
+                // 非系统类的分类不需要处理
+                if ([NSBundle bundleForClass:NSClassFromString(name)] != NSBundle.mainBundle) {
+                    return CXChildVisit_Recurse;
+                }
+            } else {
+                // 扩展不需要处理（扩展通常和类写在一起）
+                return CXChildVisit_Recurse;
+            }
+        }
+        
+        // 找不到类的分类，系统类的分类需要处理
+        if (cursor.kind == CXCursor_ObjCClassMethodDecl || // 类方法
+            cursor.kind == CXCursor_ObjCInstanceMethodDecl || // 实例方法
+            cursor.kind == CXCursor_ObjCPropertyDecl // 属性
+            ) {
+            NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
+            NSString *token = [name componentsSeparatedByString:@":"].firstObject;
+            if (token.length) {
+                [data.categorys addObject:token];
+            }
+        }
+        
+    } else if (cursor.kind == CXCursor_EnumConstantDecl ||//常量枚举
         cursor.kind == CXCursor_ObjCInterfaceDecl ||// 声明
-        cursor.kind == CXCursor_ObjCCategoryDecl ||// 分类声明
         cursor.kind == CXCursor_ObjCProtocolDecl ||// 协议
         cursor.kind == CXCursor_ObjCImplementationDecl ||// 实现
-        cursor.kind == CXCursor_EnumDecl ||//枚举
-        cursor.kind == CXCursor_ObjCCategoryImplDecl ||//分类实现
-        cursor.kind == CXCursor_TypedefDecl //Typedef
+        cursor.kind == CXCursor_EnumDecl ||// 枚举
+        cursor.kind == CXCursor_TypedefDecl ||// Typedef
+        isStatic(cursor) // static var
         ) {
         NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
-        NSArray *tokens = [name componentsSeparatedByString:@":"];
-        
-        // 前缀过滤
-        for (NSString *token in tokens) {
-//            for (NSString *prefix in data.prefixes) {
-//                if ([token rangeOfString:prefix].location == 0) {
-//                    [data.tokens addObject:token];
-//                }
-//            }
-            
-            if (token.length) {
-                [data.tokens addObject:token];
-            }
+        NSString *token = [name componentsSeparatedByString:@":"].firstObject;
+        if (token.length) {
+            [data.tokens addObject:token];
         }
     }
     
@@ -123,7 +169,7 @@ enum CXChildVisitResult _visitStrings(CXCursor cursor,
     return data.strings;
 }
 
-+ (NSSet *)classesAndMethodsWithFile:(NSString *)file
++ (NSArray <NSSet *>*)classesAndMethodsWithFile:(NSString *)file
                             prefixes:(NSArray *)prefixes
                           searchPath:(NSString *)searchPath
 {
@@ -131,11 +177,12 @@ enum CXChildVisitResult _visitStrings(CXCursor cursor,
     data.file = file;
     data.prefixes = prefixes;
     data.tokens = [NSMutableSet set];
+    data.categorys = [NSMutableSet set];
     [self _visitASTWithFile:file
                  searchPath:searchPath
                     visitor:_visitTokens
                  clientData:(__bridge void *)data];
-    return data.tokens;
+    return @[data.tokens, data.categorys];
 }
 
 /** 遍历某个文件的语法树 */

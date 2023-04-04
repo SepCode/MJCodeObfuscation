@@ -125,7 +125,7 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="22" id="Gfw-b4-bD1"/>
                                 </constraints>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" enabled="NO" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" title="QYCT" placeholderString="请输入要搜索的前缀，多个前缀之间用空格隔开" drawsBackground="YES" id="wTB-Da-5ok">
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" borderStyle="bezel" placeholderString="请输入要添加的前缀" drawsBackground="YES" id="wTB-Da-5ok">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>

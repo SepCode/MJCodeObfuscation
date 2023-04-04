@@ -153,16 +153,17 @@
     dispatch_semaphore_t sem = dispatch_semaphore_create(10);
     
     NSMutableSet *set = [NSMutableSet set];
+    NSMutableSet *set1 = [NSMutableSet set];
     for (NSString *subpath in subpaths) {
         !progress ? : progress([NSString stringWithFormat:@"分析：%@", subpath.lastPathComponent]);
         
         
         dispatch_group_async(group, dispatch_get_global_queue(0, 0), ^{
-            
-            [set addObjectsFromArray:
-             [MJClangTool classesAndMethodsWithFile:subpath
-                                           prefixes:prefixes
-                                         searchPath:dir].allObjects];
+            NSArray <NSSet *>*data = [MJClangTool classesAndMethodsWithFile:subpath
+                                                          prefixes:prefixes
+                                                        searchPath:dir];
+            [set addObjectsFromArray:data[0].allObjects];
+            [set1 addObjectsFromArray:data[1].allObjects];
             dispatch_semaphore_signal(sem);
         });
         
@@ -172,12 +173,23 @@
     dispatch_group_notify(group, dispatch_get_global_queue(0, 0), ^{
         !progress ? : progress(@"正在混淆...");
         NSMutableString *fileContent = [NSMutableString string];
-        [fileContent appendString:@"#ifndef QYCTCodeObfuscation_h\n"];
-        [fileContent appendString:@"#define QYCTCodeObfuscation_h\n"];
-        NSArray *tokens = [set sortedArrayUsingDescriptors:@[[NSSortDescriptor sortDescriptorWithKey:nil ascending:YES]]];
+        NSString *obfuscation = @"";
+        if (prefixes.count > 0) {
+            obfuscation = prefixes[0];
+        }
+        [fileContent appendString:[NSString stringWithFormat:@"#ifndef %@CodeObfuscation_h\n", obfuscation]];
+        [fileContent appendString:[NSString stringWithFormat:@"#define %@CodeObfuscation_h\n", obfuscation]];
+        
+        NSArray *sort = @[[NSSortDescriptor sortDescriptorWithKey:nil ascending:YES]];
+        // 类名，static变量，枚举，协议，typedef 处理QYCT...
+        NSArray *tokens = [set sortedArrayUsingDescriptors:sort];
         for (NSString *token in tokens) {
-            NSString *obfuscation = @"QYCT";
             [fileContent appendFormat:@"#define %@ %@%@\n", token, obfuscation, token];
+        }
+        // 分类处理..._QYCT
+        NSArray *categorys = [set1 sortedArrayUsingDescriptors:sort];
+        for (NSString *category in categorys) {
+            [fileContent appendFormat:@"#define %@ %@_%@\n", category, category, obfuscation];
         }
         [fileContent appendString:@"#endif"];
         NSInteger time = NSDate.date.timeIntervalSince1970 - date.timeIntervalSince1970;
