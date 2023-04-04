@@ -100,11 +100,11 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 
                 // 非系统类的分类不需要处理
                 if ([NSBundle bundleForClass:NSClassFromString(name)] != NSBundle.mainBundle) {
-                    return CXChildVisit_Recurse;
+                    return CXChildVisit_Continue;
                 }
             } else {
                 // 扩展不需要处理（扩展通常和类写在一起）
-                return CXChildVisit_Recurse;
+                return CXChildVisit_Continue;
             }
         }
         
