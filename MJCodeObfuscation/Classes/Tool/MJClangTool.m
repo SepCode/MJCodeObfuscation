@@ -56,14 +56,14 @@ static bool _isFromFile(const char *filepath, CXCursor cursor) {
     return [fpath isEqualToString:cpath];
 }
 
-bool isStatic(CXCursor cursor) {
+bool isStaticConst(CXCursor cursor) {
     if (clang_getCursorKind(cursor) != CXCursor_VarDecl) {
         return false;
     }
-//    CXType type = clang_getCursorType(cursor);
-//    if (!clang_isConstQualifiedType(type)) {
-//        return false;
-//    }
+    CXType type = clang_getCursorType(cursor);
+    if (!clang_isConstQualifiedType(type)) {
+        return false;
+    }
     enum CX_StorageClass storage = clang_Cursor_getStorageClass(cursor);
     if (storage != CX_SC_Static) {
         return false;
@@ -126,7 +126,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
         cursor.kind == CXCursor_ObjCImplementationDecl ||// 实现
         cursor.kind == CXCursor_EnumDecl ||// 枚举
         cursor.kind == CXCursor_TypedefDecl ||// Typedef
-        isStatic(cursor) // static var
+        isStaticConst(cursor) // static const var
         ) {
         NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
         NSString *token = [name componentsSeparatedByString:@":"].firstObject;
