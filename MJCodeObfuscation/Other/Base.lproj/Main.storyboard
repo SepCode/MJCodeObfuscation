@@ -290,11 +290,11 @@
                                 <constraints>
                                     <constraint firstAttribute="height" constant="180" id="XMq-ur-eto"/>
                                 </constraints>
-                                <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="zss-GF-QPr">
+                                <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="1" horizontal="YES" id="zss-GF-QPr">
                                     <rect key="frame" x="-100" y="-100" width="87" height="18"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>
-                                <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="KLO-Za-YsP">
+                                <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="KLO-Za-YsP">
                                     <rect key="frame" x="492" y="1" width="15" height="178"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                 </scroller>

@@ -11,6 +11,7 @@
 #import "NSFileManager+Extension.h"
 #import "NSString+Extension.h"
 #import <JavaScriptCore/JavaScriptCore.h>
+#import <objc/runtime.h>
 
 /** 类名、方法名 */
 @interface MJTokensClientData : NSObject
@@ -46,6 +47,10 @@ static const char *_getCursorName(CXCursor cursor) {
     return clang_getCString(clang_getCursorSpelling(cursor));
 }
 
+static const char *_getCursorUSR(CXCursor cursor) {
+    return clang_getCString(clang_getCursorUSR(cursor));
+}
+
 static bool _isFromFile(const char *filepath, CXCursor cursor) {
     if (filepath == NULL) return 0;
     const char *cursorPath = _getFilename(cursor);
@@ -71,6 +76,8 @@ bool isStaticExternConst(CXCursor cursor) {
     return true;
 }
 
+extern const char* _dyld_get_objc_selector(const char* selName);
+
 enum CXChildVisitResult _visitTokens(CXCursor cursor,
                                       CXCursor parent,
                                       CXClientData clientData) {
@@ -89,7 +96,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
     
     // 分类或者扩展
     if ((parent.kind == CXCursor_ObjCCategoryDecl || parent.kind == CXCursor_ObjCCategoryImplDecl) && clang_getCursorSemanticParent(parent).kind == CXCursor_TranslationUnit) {
-        NSString *usr = [NSString stringWithUTF8String:clang_getCString(clang_getCursorUSR(parent))];
+        NSString *usr = [NSString stringWithUTF8String:_getCursorUSR(parent)];
         
         // 有类的分类或扩展
         if (usr.length > 0) {
@@ -113,7 +120,15 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
             cursor.kind == CXCursor_ObjCInstanceMethodDecl || // 实例方法
             cursor.kind == CXCursor_ObjCPropertyDecl // 属性
             ) {
-            NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
+            const char *cname = _getCursorName(cursor);
+            NSString *name = [NSString stringWithUTF8String:cname];
+            if (cursor.kind == CXCursor_ObjCClassMethodDecl || cursor.kind == CXCursor_ObjCInstanceMethodDecl) {
+                // 系统SEL
+                const char *sel = _dyld_get_objc_selector(cname);
+                if (sel != NULL) {
+                    return CXChildVisit_Continue;
+                }
+            }
             NSString *token = [name componentsSeparatedByString:@":"].firstObject;
             if (token.length) {
                 [data.categorys addObject:token];
