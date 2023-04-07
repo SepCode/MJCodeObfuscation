@@ -122,12 +122,10 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
             ) {
             const char *cname = _getCursorName(cursor);
             NSString *name = [NSString stringWithUTF8String:cname];
-            if (cursor.kind == CXCursor_ObjCClassMethodDecl || cursor.kind == CXCursor_ObjCInstanceMethodDecl) {
-                // 系统SEL
-                const char *sel = _dyld_get_objc_selector(cname);
-                if (sel != NULL) {
-                    return CXChildVisit_Continue;
-                }
+            // 系统SEL
+            const char *sel = _dyld_get_objc_selector(cname);
+            if (sel != NULL) {
+                return CXChildVisit_Continue;
             }
             NSString *token = [name componentsSeparatedByString:@":"].firstObject;
             if (token.length) {
