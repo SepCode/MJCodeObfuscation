@@ -95,9 +95,15 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
     // 分类的类如果是系统类，属性名和方法需要改名，不是系统类如果能找到，不需要改名，找不到需要改名。
     
     // 分类或者扩展
-    if ((parent.kind == CXCursor_ObjCCategoryDecl || parent.kind == CXCursor_ObjCCategoryImplDecl) && clang_getCursorSemanticParent(parent).kind == CXCursor_TranslationUnit) {
+    if (parent.kind == CXCursor_ObjCCategoryDecl || parent.kind == CXCursor_ObjCCategoryImplDecl) {
         NSString *usr = [NSString stringWithUTF8String:_getCursorUSR(parent)];
-        
+        // 找不到类的分类，系统类的分类需要处理
+        const char *cname = _getCursorName(cursor);
+        NSString *name = [NSString stringWithUTF8String:cname];
+        NSArray <NSString *>*sels = [name componentsSeparatedByString:@":"];
+        if ([sels.firstObject isEqualToString:@"danmuSuperView"]) {
+            
+        }
         // 有类的分类或扩展
         if (usr.length > 0) {
             NSString *cy = @"c:objc(cy)";
@@ -106,7 +112,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 NSString *name = [usrs.firstObject substringFromIndex:cy.length];
                 
                 // 非系统类的分类不需要处理
-                if ([NSBundle bundleForClass:NSClassFromString(name)] != NSBundle.mainBundle) {
+                if ([NSBundle bundleForClass:NSClassFromString(name)] == NSBundle.mainBundle) {
                     return CXChildVisit_Continue;
                 }
             } else {
@@ -114,22 +120,36 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 return CXChildVisit_Continue;
             }
         }
+//        else {
+//            return CXChildVisit_Continue;
+//        }
         
-        // 找不到类的分类，系统类的分类需要处理
+        
+        NSLog(@"---1 %s", cname);
         if (cursor.kind == CXCursor_ObjCClassMethodDecl || // 类方法
-            cursor.kind == CXCursor_ObjCInstanceMethodDecl || // 实例方法
-            cursor.kind == CXCursor_ObjCPropertyDecl // 属性
+            cursor.kind == CXCursor_ObjCInstanceMethodDecl // 实例方法
             ) {
-            const char *cname = _getCursorName(cursor);
-            NSString *name = [NSString stringWithUTF8String:cname];
             // 系统SEL
-            const char *sel = _dyld_get_objc_selector(cname);
-            if (sel != NULL) {
+            const char *selector = _dyld_get_objc_selector(cname);
+            if (selector != NULL) {
                 return CXChildVisit_Continue;
             }
-            NSString *token = [name componentsSeparatedByString:@":"].firstObject;
+            
+            for (NSString *sel in sels) {
+                const char *selector = _dyld_get_objc_selector(sel.UTF8String);
+                if (selector == NULL && sel.length) {
+                    [data.categorys addObject:sel];
+                    return CXChildVisit_Continue;
+                }
+            }
+            
+        } else if (cursor.kind == CXCursor_ObjCPropertyDecl // 属性
+                   ) {
+            
+            NSString *token = sels.firstObject;
             if (token.length) {
                 [data.categorys addObject:token];
+                return CXChildVisit_Continue;
             }
         }
         
@@ -147,9 +167,76 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
             [data.tokens addObject:token];
         }
     }
+//    else if (cursor.kind == CXCursor_ObjCCategoryImplDecl || cursor.kind == CXCursor_ObjCCategoryDecl) {
+////        const ObjCCategoryDecl *CD = (ObjCCategoryDecl *)(cursor.data[0]);
+//////        NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
+////        CXString name = clang_getCString(clang_getCursorDisplayName(cursor));
+////        CXCursor classCursor = clang_getCursorReferenced(clang_getCursorSemanticParent(cursor));
+////        CXFile file = clang_getCursorLocation(cursor).file;
+////        printf("Category name: %s\n", clang_getCString(name));
+////        printf("Belonging class: %s\n", clang_getCString(clang_getCursorSpelling(classCursor)));
+////        printf("File path: %s\n", clang_getCString(clang_getFileName(file)));
+//    }
     
     return CXChildVisit_Recurse;
 }
+
+void diagnostic(CXClientData client_data, CXDiagnosticSet set, void *reserved) {
+    unsigned int num = clang_getNumDiagnosticsInSet(set);
+    for (unsigned int i = 0; i < num; i++) {
+        CXDiagnostic dia = clang_getDiagnosticInSet(set, i);
+        NSLog(@"---4 %s", clang_getCString(clang_getDiagnosticSpelling(dia)));
+    }
+}
+
+
+CXIdxClientFile enteredMainFile(CXClientData client_data,
+                                CXFile mainFile, void *reserved) {
+    NSLog(@"---7 %s", clang_getCString(clang_getFileName(mainFile)));
+    return 0;
+}
+
+/**
+ * Called when a file gets \#included/\#imported.
+ */
+CXIdxClientFile ppIncludedFile(CXClientData client_data,
+                               const CXIdxIncludedFileInfo *fileInfo) {
+    NSLog(@"---6 %s", fileInfo->filename);
+    return 0;
+}
+
+/**
+ * Called when a AST file (PCH or module) gets imported.
+ *
+ * AST files will not get indexed (there will not be callbacks to index all
+ * the entities in an AST file). The recommended action is that, if the AST
+ * file is not already indexed, to initiate a new indexing job specific to
+ * the AST file.
+ */
+CXIdxClientASTFile importedASTFile(CXClientData client_data,
+                                   const CXIdxImportedASTFileInfo *fileInfo) {
+    NSLog(@"---5 %s", clang_getCString(clang_getFileName(fileInfo->file)));
+    return 0;
+}
+
+/**
+ * Called at the beginning of indexing a translation unit.
+ */
+CXIdxClientContainer startedTranslationUnit(CXClientData client_data,
+                                            void *reserved) {
+    
+    return NULL;
+}
+
+
+void indexEntityReference(CXClientData client_data, const CXIdxEntityRefInfo *entityRefInfo) {
+    NSLog(@"---2 %s", entityRefInfo->referencedEntity->name);
+}
+
+void indexDeclaration(CXClientData client_data, const CXIdxDeclInfo *declInfo) {
+    NSLog(@"---3 %s", declInfo->entityInfo->name);
+}
+
 
 enum CXChildVisitResult _visitStrings(CXCursor cursor,
                                       CXCursor parent,
@@ -227,6 +314,7 @@ enum CXChildVisitResult _visitStrings(CXCursor cursor,
     args[argIndex++] = "i386";
     args[argIndex++] = "-isysroot";
     args[argIndex++] = "/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk";
+    // </Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS.simruntime/Contents/Resources/RuntimeRoot/System/Library/PrivateFrameworks/UIKitCore.framework>
     if (searchPath.length) {
         args[argIndex++] = "-I";
         args[argIndex++] = searchPath.UTF8String;
@@ -249,7 +337,13 @@ enum CXChildVisitResult _visitStrings(CXCursor cursor,
     clang_visitChildren(clang_getTranslationUnitCursor(tu),
                         visitor, clientData);
     
+    CXIndexAction action = clang_IndexAction_create(index);
+    IndexerCallbacks index_callbacks = {0};
+//    index_callbacks.diagnostic = diagnostic;
+    clang_indexTranslationUnit(action, clientData, &index_callbacks, sizeof(index_callbacks), CXIndexOpt_None, tu);
+    
     // 销毁
+    clang_IndexAction_dispose(action);
     clang_disposeTranslationUnit(tu);
     clang_disposeIndex(index);
 }
