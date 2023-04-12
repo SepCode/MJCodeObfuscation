@@ -107,9 +107,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
         const char *cname = _getCursorName(cursor);
         NSString *name = [NSString stringWithUTF8String:cname];
         NSArray <NSString *>*sels = [name componentsSeparatedByString:@":"];
-        if ([sels.firstObject isEqualToString:@"danmuSuperView"]) {
-            
-        }
+    
         // 有类的分类或扩展
         if (usr.length > 0) {
             NSString *cy = @"c:objc(cy)";
@@ -117,8 +115,11 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 NSArray <NSString *>*usrs = [usr componentsSeparatedByString:@"@"];
                 NSString *name = [usrs.firstObject substringFromIndex:cy.length];
                 
-                // 非系统类的分类不需要处理
-                if ([NSBundle bundleForClass:NSClassFromString(name)] == NSBundle.mainBundle) {
+                // log系统或者非系统类的类名
+                NSLog(@"---class: %@", name);
+                
+                // 非系统类的分类不需要处理 不处理类名白名单
+                if ([data.tokensWhiteList containsObject:name]) {
                     return CXChildVisit_Continue;
                 }
             } else {
@@ -143,7 +144,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
             
             for (NSString *sel in sels) {
                 const char *selector = _dyld_get_objc_selector(sel.UTF8String);
-                if (selector == NULL && sel.length) {
+                if (selector == NULL && sel.length && ![data.categorysWhiteList containsObject:sel]) { // 不处理方法白名单
                     [data.categorys addObject:sel];
                     return CXChildVisit_Continue;
                 }
