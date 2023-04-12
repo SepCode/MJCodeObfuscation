@@ -152,6 +152,8 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 if (selector == NULL && sel.length && ![data.categorysWhiteList containsObject:sel]) { // 不处理方法白名单
                     [data.categorys addObject:sel];
                     return CXChildVisit_Continue;
+                } else {
+                    NSLog(@"---categorys file: %@ selector: %@ ❌", [NSString stringWithUTF8String:cursorPath].lastPathComponent, sel);
                 }
             }
             
