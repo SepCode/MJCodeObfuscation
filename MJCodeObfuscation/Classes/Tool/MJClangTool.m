@@ -13,11 +13,17 @@
 #import <JavaScriptCore/JavaScriptCore.h>
 #import <objc/runtime.h>
 
+static NSMutableSet *tokensWhiteList;
+static NSMutableSet *categorysWhiteList;
+
 /** 类名、方法名 */
 @interface MJTokensClientData : NSObject
 @property (nonatomic, strong) NSArray *prefixes;
 @property (nonatomic, strong) NSMutableSet *tokens;
 @property (nonatomic, strong) NSMutableSet *categorys;
+
+@property (nonatomic, strong) NSMutableSet *tokensWhiteList;
+@property (nonatomic, strong) NSMutableSet *categorysWhiteList;
 @property (nonatomic, copy) NSString *file;
 @end
 
@@ -278,6 +284,8 @@ enum CXChildVisitResult _visitStrings(CXCursor cursor,
     data.prefixes = prefixes;
     data.tokens = [NSMutableSet set];
     data.categorys = [NSMutableSet set];
+    data.tokensWhiteList = tokensWhiteList;
+    data.categorysWhiteList = categorysWhiteList;
     [self _visitASTWithFile:file
                  searchPath:searchPath
                     visitor:_visitTokens

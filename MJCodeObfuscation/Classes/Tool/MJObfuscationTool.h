@@ -19,6 +19,13 @@
                    progress:(void (^)(NSString *detail))progress
                  completion:(void (^)(NSString *h, NSString *m))completion;
 
+
+/// 添加白名单
+/// - Parameters:
+///   - tokens: 类名，static变量，枚举，协议，typedef
+///   - categorys: 分类的方法，属性
++ (void)obfuscateWhiteList:(NSMutableSet *)tokens categorys:(NSMutableSet *)categorys;
+
 /** 混淆dir下的所有类名、方法名 */
 + (void)obfuscateAtDir:(NSString *)dir
               prefixes:(NSArray *)prefixes

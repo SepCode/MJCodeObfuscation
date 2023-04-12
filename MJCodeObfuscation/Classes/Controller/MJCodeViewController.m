@@ -75,6 +75,9 @@
     self.chooseBtn.enabled = NO;
     self.prefixFiled.enabled = NO;
     
+    // 设置白名单
+    [MJObfuscationTool obfuscateWhiteList:[self getTokens] categorys:[self getCategorys]];
+    
     // 获得前缀
     NSArray *prefixes = [self.prefixFiled.stringValue mj_componentsSeparatedBySpace];
     
@@ -114,6 +117,14 @@
                                  progress:progress
                                completion:completion];
     });
+}
+
+- (NSMutableSet *)getTokens {
+    return [NSMutableSet setWithArray:@[]];
+}
+
+- (NSMutableSet *)getCategorys {
+    return [NSMutableSet setWithArray:@[]];
 }
 
 @end

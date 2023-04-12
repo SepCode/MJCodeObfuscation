@@ -8,6 +8,9 @@
 
 #import <Foundation/Foundation.h>
 
+static NSMutableSet *tokensWhiteList;
+static NSMutableSet *categorysWhiteList;
+
 @interface MJClangTool : NSObject
 
 /** 获得file中的所有字符串 */

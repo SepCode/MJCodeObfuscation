@@ -139,6 +139,11 @@
     completion(hFileContent, mFileContent);
 }
 
++ (void)obfuscateWhiteList:(NSMutableSet *)tokens categorys:(NSMutableSet *)categorys {
+    tokensWhiteList = tokens;
+    categorysWhiteList = categorys;
+}
+
 + (void)obfuscateAtDir:(NSString *)dir
                     prefixes:(NSArray *)prefixes
                     progress:(void (^)(NSString *))progress
