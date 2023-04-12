@@ -76,7 +76,7 @@
     self.prefixFiled.enabled = NO;
     
     // 设置白名单
-    [MJObfuscationTool obfuscateWhiteList:[self getTokens] categorys:[self getCategorys]];
+    [MJObfuscationTool obfuscateWhiteList:[self getTokensWhiteList] categorys:[self getCategorysWhiteList]];
     
     // 获得前缀
     NSArray *prefixes = [self.prefixFiled.stringValue mj_componentsSeparatedBySpace];
@@ -118,8 +118,8 @@
                                completion:completion];
     });
 }
-
-- (NSMutableSet *)getTokens {
+// 不处理分类白名单
+- (NSMutableSet *)getTokensWhiteList {
     return [NSMutableSet setWithArray:@[@"VIPMarketSplitManager",
                                         @"QYNewCutDownloadManager",
                                         @"QYPlayerPortraitControlView",
@@ -133,9 +133,11 @@
                                         @"QYAdManager",
                                         @"QYPlayerRotationManager",]];
 }
-
-- (NSMutableSet *)getCategorys {
-    return [NSMutableSet setWithArray:@[]];
+// 不处理分类的方法属性白名单
+- (NSMutableSet *)getCategorysWhiteList {
+    return [NSMutableSet setWithArray:@[@"playerViewType",
+                                        @"isPortrait",
+                                      ]];
 }
 
 @end

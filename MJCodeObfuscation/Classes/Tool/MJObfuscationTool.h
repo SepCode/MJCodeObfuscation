@@ -22,8 +22,8 @@
 
 /// 添加白名单
 /// - Parameters:
-///   - tokens: 不处理token白名单： 类名，static变量，枚举，协议，typedef
-///   - categorys: 不处理方法白名单： 分类的方法，属性
+///   - tokens: 不处理分类白名单
+///   - categorys: 不处理分类的方法属性白名单
 + (void)obfuscateWhiteList:(NSMutableSet *)tokens categorys:(NSMutableSet *)categorys;
 
 /** 混淆dir下的所有类名、方法名 */
