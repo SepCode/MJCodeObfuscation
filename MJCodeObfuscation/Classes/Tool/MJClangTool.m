@@ -125,8 +125,6 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 if ([data.tokensWhiteList containsObject:name]) {
                     return CXChildVisit_Continue;
                 }
-                // log系统或者非系统类的类名
-                NSLog(@"---categorys file: %@ class: %@", [NSString stringWithUTF8String:cursorPath].lastPathComponent, name);
                 
             } else {
                 // 扩展不需要处理（扩展通常和类写在一起）
@@ -167,6 +165,9 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 return CXChildVisit_Continue;
             }
         }
+        
+        // log系统或者非系统类的类名
+        NSLog(@"---categorys file: %@ class: %@", [NSString stringWithUTF8String:cursorPath].lastPathComponent, name);
         
     } else if (cursor.kind == CXCursor_EnumConstantDecl ||//常量枚举
         cursor.kind == CXCursor_ObjCInterfaceDecl ||// 声明
