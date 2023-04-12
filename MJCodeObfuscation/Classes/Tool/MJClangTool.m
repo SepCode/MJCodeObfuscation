@@ -176,6 +176,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
         cursor.kind == CXCursor_ObjCProtocolDecl ||// 协议
         cursor.kind == CXCursor_ObjCImplementationDecl ||// 实现
         cursor.kind == CXCursor_EnumDecl ||// 枚举
+        cursor.kind == CXCursor_TypedefDecl || // Typedef
         isStaticExternConst(cursor) // static or extern const var
         ) {
         NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
