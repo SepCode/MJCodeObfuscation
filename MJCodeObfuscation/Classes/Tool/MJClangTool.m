@@ -13,8 +13,8 @@
 #import <JavaScriptCore/JavaScriptCore.h>
 #import <objc/runtime.h>
 
-static NSMutableSet *tokensWhiteList;
-static NSMutableSet *categorysWhiteList;
+NSMutableSet *tokensWhiteList;
+NSMutableSet *categorysWhiteList;
 
 /** 类名、方法名 */
 @interface MJTokensClientData : NSObject

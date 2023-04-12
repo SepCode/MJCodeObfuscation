@@ -8,8 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
-static NSMutableSet *tokensWhiteList;
-static NSMutableSet *categorysWhiteList;
+extern NSMutableSet *tokensWhiteList;
+extern NSMutableSet *categorysWhiteList;
 
 @interface MJClangTool : NSObject
 
