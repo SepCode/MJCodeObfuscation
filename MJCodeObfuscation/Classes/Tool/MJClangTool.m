@@ -126,7 +126,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                     return CXChildVisit_Continue;
                 }
                 // log系统或者非系统类的类名
-                NSLog(@"---class: %@", name);
+                NSLog(@"---categorys file: %@ class: %@", [NSString stringWithUTF8String:cursorPath].lastPathComponent, name);
                 
             } else {
                 // 扩展不需要处理（扩展通常和类写在一起）
@@ -139,10 +139,10 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
         NSString *name = [NSString stringWithUTF8String:cname];
         NSArray <NSString *>*sels = [name componentsSeparatedByString:@":"];
         
-        NSLog(@"---categorys file: %@ name: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
         if (cursor.kind == CXCursor_ObjCClassMethodDecl || // 类方法
             cursor.kind == CXCursor_ObjCInstanceMethodDecl // 实例方法
             ) {
+            NSLog(@"---categorys file: %@ method: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
             // 系统SEL
             const char *selector = _dyld_get_objc_selector(cname);
             if (selector != NULL) {
@@ -159,7 +159,8 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
             
         } else if (cursor.kind == CXCursor_ObjCPropertyDecl // 属性
                    ) {
-            
+            NSLog(@"---categorys file: %@ property: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
+
             NSString *token = sels.firstObject;
             if (token.length) {
                 [data.categorys addObject:token];
@@ -172,13 +173,17 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
         cursor.kind == CXCursor_ObjCProtocolDecl ||// 协议
         cursor.kind == CXCursor_ObjCImplementationDecl ||// 实现
         cursor.kind == CXCursor_EnumDecl ||// 枚举
-        cursor.kind == CXCursor_TypedefDecl ||// Typedef
         isStaticExternConst(cursor) // static or extern const var
         ) {
         NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
         NSString *token = [name componentsSeparatedByString:@":"].firstObject;
         if (token.length) {
-            [data.tokens addObject:token];
+            if (cursor.kind == CXCursor_TypedefDecl // Typedef
+                ) { // 使用后缀
+                [data.categorys addObject:token];
+            } else {
+                [data.tokens addObject:token];
+            }
         }
     }
     
