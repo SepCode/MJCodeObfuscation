@@ -140,7 +140,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
         if (cursor.kind == CXCursor_ObjCClassMethodDecl || // 类方法
             cursor.kind == CXCursor_ObjCInstanceMethodDecl // 实例方法
             ) {
-            NSLog(@"---categorys file: %@ method: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
+            NSLog(@"---categorys file: %@ ---method: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
             // 系统SEL
             const char *selector = _dyld_get_objc_selector(cname);
             if (selector != NULL) {
@@ -153,13 +153,13 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                     [data.categorys addObject:sel];
                     return CXChildVisit_Continue;
                 } else {
-                    NSLog(@"---categorys file: %@ selector: %@ ❌", [NSString stringWithUTF8String:cursorPath].lastPathComponent, sel);
+                    NSLog(@"---categorys file: %@ ---method selector: %@ ❌", [NSString stringWithUTF8String:cursorPath].lastPathComponent, sel);
                 }
             }
             
         } else if (cursor.kind == CXCursor_ObjCPropertyDecl // 属性
                    ) {
-            NSLog(@"---categorys file: %@ property: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
+            NSLog(@"---categorys file: %@ ---property: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
 
             NSString *token = sels.firstObject;
             if (token.length) {
@@ -169,7 +169,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
         }
         
         // log系统或者非系统类的类名
-        NSLog(@"---categorys file: %@ class: %@", [NSString stringWithUTF8String:cursorPath].lastPathComponent, name);
+        NSLog(@"---categorys file: %@ ---class: %@", [NSString stringWithUTF8String:cursorPath].lastPathComponent, name);
         
     } else if (cursor.kind == CXCursor_EnumConstantDecl ||//常量枚举
         cursor.kind == CXCursor_ObjCInterfaceDecl ||// 声明
