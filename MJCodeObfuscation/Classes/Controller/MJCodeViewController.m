@@ -120,7 +120,18 @@
 }
 
 - (NSMutableSet *)getTokens {
-    return [NSMutableSet setWithArray:@[]];
+    return [NSMutableSet setWithArray:@[@"VIPMarketSplitManager",
+                                        @"QYNewCutDownloadManager",
+                                        @"QYPlayerPortraitControlView",
+                                        @"QYIphonePlayControlView",
+                                        @"QYPlayerViewController",
+                                        @"QYAIRecoManager",
+                                        @"QYCommonPlayerView",
+                                        @"QYCustomizePlayerViewController",
+                                        @"PlayerDataItem",
+                                        @"QYPreAdControlView",
+                                        @"QYAdManager",
+                                        @"QYPlayerRotationManager",]];
 }
 
 - (NSMutableSet *)getCategorys {

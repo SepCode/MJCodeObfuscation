@@ -67,6 +67,15 @@ static bool _isFromFile(const char *filepath, CXCursor cursor) {
     return [fpath isEqualToString:cpath];
 }
 
+static bool _isFromFileName(const char *filepath, const char *cursorPath) {
+    if (filepath == NULL) return 0;
+    if (cursorPath == NULL) return 0;
+    NSString *fpath = [NSString stringWithUTF8String:filepath].stringByDeletingPathExtension;
+    NSString *cpath = [NSString stringWithUTF8String:cursorPath].stringByDeletingPathExtension;
+    
+    return [fpath isEqualToString:cpath];
+}
+
 bool isStaticExternConst(CXCursor cursor) {
     if (clang_getCursorKind(cursor) != CXCursor_VarDecl) {
         return false;
@@ -90,7 +99,8 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
     if (clientData == NULL) return CXChildVisit_Break;
     
     MJTokensClientData *data = (__bridge MJTokensClientData *)clientData;
-    if (!_isFromFile(data.file.UTF8String, cursor)) return CXChildVisit_Continue;
+    const char *cursorPath = _getFilename(cursor);
+    if (!_isFromFileName(data.file.UTF8String, cursorPath)) return CXChildVisit_Continue;
     
     
     
@@ -103,11 +113,7 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
     // 分类或者扩展
     if (parent.kind == CXCursor_ObjCCategoryDecl || parent.kind == CXCursor_ObjCCategoryImplDecl) {
         NSString *usr = [NSString stringWithUTF8String:_getCursorUSR(parent)];
-        // 找不到类的分类，系统类的分类需要处理
-        const char *cname = _getCursorName(cursor);
-        NSString *name = [NSString stringWithUTF8String:cname];
-        NSArray <NSString *>*sels = [name componentsSeparatedByString:@":"];
-    
+        
         // 有类的分类或扩展
         if (usr.length > 0) {
             NSString *cy = @"c:objc(cy)";
@@ -115,24 +121,25 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
                 NSArray <NSString *>*usrs = [usr componentsSeparatedByString:@"@"];
                 NSString *name = [usrs.firstObject substringFromIndex:cy.length];
                 
-                // log系统或者非系统类的类名
-                NSLog(@"---class: %@", name);
-                
                 // 非系统类的分类不需要处理 不处理类名白名单
                 if ([data.tokensWhiteList containsObject:name]) {
                     return CXChildVisit_Continue;
                 }
+                // log系统或者非系统类的类名
+                NSLog(@"---class: %@", name);
+                
             } else {
                 // 扩展不需要处理（扩展通常和类写在一起）
                 return CXChildVisit_Continue;
             }
         }
-//        else {
-//            return CXChildVisit_Continue;
-//        }
         
+        // 找不到类的分类，系统类的分类需要处理
+        const char *cname = _getCursorName(cursor);
+        NSString *name = [NSString stringWithUTF8String:cname];
+        NSArray <NSString *>*sels = [name componentsSeparatedByString:@":"];
         
-        NSLog(@"---1 %s", cname);
+        NSLog(@"---categorys file: %@ name: %s", [NSString stringWithUTF8String:cursorPath].lastPathComponent, cname);
         if (cursor.kind == CXCursor_ObjCClassMethodDecl || // 类方法
             cursor.kind == CXCursor_ObjCInstanceMethodDecl // 实例方法
             ) {
@@ -174,16 +181,6 @@ enum CXChildVisitResult _visitTokens(CXCursor cursor,
             [data.tokens addObject:token];
         }
     }
-//    else if (cursor.kind == CXCursor_ObjCCategoryImplDecl || cursor.kind == CXCursor_ObjCCategoryDecl) {
-////        const ObjCCategoryDecl *CD = (ObjCCategoryDecl *)(cursor.data[0]);
-//////        NSString *name = [NSString stringWithUTF8String:_getCursorName(cursor)];
-////        CXString name = clang_getCString(clang_getCursorDisplayName(cursor));
-////        CXCursor classCursor = clang_getCursorReferenced(clang_getCursorSemanticParent(cursor));
-////        CXFile file = clang_getCursorLocation(cursor).file;
-////        printf("Category name: %s\n", clang_getCString(name));
-////        printf("Belonging class: %s\n", clang_getCString(clang_getCursorSpelling(classCursor)));
-////        printf("File path: %s\n", clang_getCString(clang_getFileName(file)));
-//    }
     
     return CXChildVisit_Recurse;
 }
